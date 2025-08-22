@@ -5,7 +5,8 @@ from . import database, schemas, crud
 
 app = FastAPI(title="UWSD - RoshTek Industries")
 
-# Dependency
+
+# Dependency: provide DB session for endpoints
 def get_db():
     db = database.SessionLocal()
     try:
@@ -13,6 +14,8 @@ def get_db():
     finally:
         db.close()
 
+
+# ---- PERSON ENDPOINTS ---- #
 
 @app.post("/person/", response_model=schemas.PersonOut)
 def create_person(person: schemas.PersonCreate, db: Session = Depends(get_db)):
@@ -22,7 +25,7 @@ def create_person(person: schemas.PersonCreate, db: Session = Depends(get_db)):
 @app.get("/person/{person_id}", response_model=schemas.PersonOut)
 def read_person(person_id: int, db: Session = Depends(get_db)):
     db_person = crud.get_person(db, person_id)
-    if db_person is None:
+    if not db_person:
         raise HTTPException(status_code=404, detail="Person not found")
     return db_person
 
@@ -34,10 +37,10 @@ def read_people(db: Session = Depends(get_db)):
 
 @app.put("/person/{person_id}", response_model=schemas.PersonOut)
 def update_person(person_id: int, person: schemas.PersonUpdate, db: Session = Depends(get_db)):
-    updated = crud.update_person(db, person_id, person)
-    if not updated:
+    updated_person = crud.update_person(db, person_id, person)
+    if not updated_person:
         raise HTTPException(status_code=404, detail="Person not found")
-    return updated
+    return updated_person
 
 
 @app.delete("/person/{person_id}")
